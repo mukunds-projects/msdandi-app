@@ -5,46 +5,44 @@ import Notification from '@/components/Notification';
 
 export default function Playground() {
   const [apiKey, setApiKey] = useState('');
+  const [gitHubUrl, setGitHubUrl] = useState('');
   const [notification, setNotification] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [summary, setSummary] = useState(null);
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setSummary(null);
     
     try {
-      const response = await fetch('/api/validate-key', {
+      const response = await fetch('/api/github-summarizer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-api-key': apiKey
         },
-        body: JSON.stringify({ apiKey }),
+        body: JSON.stringify({ gitHubUrl })
       });
 
       const data = await response.json();
 
-      if (data.valid) {
+      if (response.ok) {
         setNotification({ 
-          message: `Valid API Key: ${data.keyData.name} (${data.keyData.usage}/${data.keyData.monthly_limit || '∞'} requests)`, 
+          message: 'Repository summary generated successfully', 
           type: 'success' 
         });
-        
-        // Store the API key data in session storage for the protected route
-        sessionStorage.setItem('apiKeyData', JSON.stringify(data.keyData));
-        
-        setTimeout(() => {
-          router.push('/protected');
-        }, 2000);
+        setSummary(data.data);
       } else {
         setNotification({ 
-          message: data.message || 'Invalid API Key', 
+          message: data.error || 'Failed to generate summary', 
           type: 'delete' 
         });
       }
     } catch (error) {
       setNotification({ 
-        message: 'Error validating API key', 
+        message: 'Error processing request', 
         type: 'delete' 
       });
     } finally {
@@ -80,15 +78,57 @@ export default function Playground() {
               required
             />
           </div>
+
+          <div>
+            <label htmlFor="gitHubUrl" className="block text-sm font-medium text-gray-700 mb-2">
+              GitHub Repository URL
+            </label>
+            <input
+              id="gitHubUrl"
+              type="url"
+              value={gitHubUrl}
+              onChange={(e) => setGitHubUrl(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="https://github.com/username/repository"
+              required
+            />
+          </div>
+
           <button
             type="submit"
             disabled={isLoading}
             className={`w-full py-3 bg-blue-600 text-white rounded-lg transition-colors
               ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
           >
-            {isLoading ? 'Validating...' : 'Validate Key'}
+            {isLoading ? 'Processing...' : 'Generate Summary'}
           </button>
         </form>
+
+        {summary && (
+          <div className="mt-8 space-y-4">
+            <h2 className="text-lg font-semibold">Repository Summary</h2>
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <p><span className="font-medium">Repository:</span> {summary.repository}</p>
+              <p><span className="font-medium">Summary:</span> {summary.summary}</p>
+              <div>
+                <span className="font-medium">Main Technologies:</span>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {summary.mainTechnologies.map((tech, index) => (
+                    <span 
+                      key={index}
+                      className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <p><span className="font-medium">Total Files:</span> {summary.totalFiles}</p>
+              <p><span className="font-medium">Total Commits:</span> {summary.totalCommits}</p>
+              <p><span className="font-medium">Contributors:</span> {summary.contributors}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
