@@ -67,7 +67,7 @@ Your response must be a valid JSON object matching the following format:
 const model = new ChatOpenAI({
   modelName: "gpt-3.5-turbo",
   temperature: 0.7,
-  openAIApiKey: apiKey,
+  openAIApiKey: "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",
 });
 
 // Create the chain
