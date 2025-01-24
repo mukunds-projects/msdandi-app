@@ -5,6 +5,8 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { z } from "zod";
 
 
+const apiKey = process.env.OPENAI_API_KEY;
+
 // Define the schema for the output
 const summarySchema = z.object({
   summary: z.string()
@@ -65,6 +67,7 @@ Your response must be a valid JSON object matching the following format:
 const model = new ChatOpenAI({
   modelName: "gpt-3.5-turbo",
   temperature: 0.7,
+  openAIApiKey: apiKey,
 });
 
 // Create the chain
