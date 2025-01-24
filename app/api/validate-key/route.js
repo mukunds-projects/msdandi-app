@@ -2,20 +2,6 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import fetch from 'node-fetch';
 
-async function getReadmeContent(repoUrl) {
-  const response = await fetch(`${repoUrl}/readme`, {
-    headers: {
-      'Accept': 'application/vnd.github.v3+json'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch README from ${repoUrl}`);
-  }
-
-  const data = await response.json();
-  return Buffer.from(data.content, 'base64').toString('utf-8');
-}
 
 export async function POST(request) {
   try {
@@ -57,8 +43,6 @@ export async function POST(request) {
     }
 
     
-    const readmeContent = await getReadmeContent(repoUrl);
-    console.log(readmeContent);
    
     return NextResponse.json({ 
       valid: true,
