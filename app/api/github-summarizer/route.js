@@ -132,6 +132,8 @@ export async function POST(request) {
     // Generate summary using the chain
     const aiSummary = await summarizeReadme(readmeContent);
 
+    console.log(aiSummary);
+    
     // Prepare the response
     const summary = {
       repository: gitHubUrl,

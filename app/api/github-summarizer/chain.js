@@ -4,6 +4,7 @@ import { StructuredOutputParser } from "langchain/output_parsers";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { z } from "zod";
 
+
 // Define the schema for the output
 const summarySchema = z.object({
   summary: z.string()
