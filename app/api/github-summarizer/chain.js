@@ -4,9 +4,6 @@ import { StructuredOutputParser } from "langchain/output_parsers";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { z } from "zod";
 
-
-const apiKey = process.env.OPENAI_API_KEY;
-
 // Define the schema for the output
 const summarySchema = z.object({
   summary: z.string()
@@ -29,13 +26,14 @@ const summarySchema = z.object({
 const parser = StructuredOutputParser.fromZodSchema(summarySchema);
 
 // Create the prompt template
-const promptTemplate = PromptTemplate.fromTemplate(`
+const prompt = PromptTemplate.fromTemplate(`
 Analyze this GitHub repository README content and provide a comprehensive summary.
 Focus on the main features, purpose, and unique aspects of the project.
 
 README Content:
 {readme_content}
 
+You must format your response as a JSON object with the following structure:
 {format_instructions}
 
 Required sections in your analysis:
@@ -51,46 +49,36 @@ Make sure to:
 - Focus on technical aspects and implementation details
 - Include unique or innovative approaches used
 - Consider the project's complexity and learning curve
-
-Your response must be a valid JSON object matching the following format:
-{
-  "summary": "string",
-  "cool_facts": ["string"],
-  "technologies": ["string"],
-  "key_features": ["string"],
-  "difficulty_level": "Beginner|Intermediate|Advanced",
-  "estimated_study_time": "string"
-}
 `);
-
-// Create the LLM
-const model = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
-  temperature: 0.7,
-  openAIApiKey: "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",
-});
-
-// Create the chain
-const chain = RunnableSequence.from([
-  {
-    readme_content: (input) => input.readme_content,
-    format_instructions: async () => parser.getFormatInstructions(),
-  },
-  promptTemplate,
-  model,
-  async (response) => {
-    try {
-      const parsed = await parser.parse(response.content);
-      return summarySchema.parse(parsed);
-    } catch (e) {
-      console.error("Failed to parse response:", e);
-      throw new Error("Failed to generate valid summary");
-    }
-  },
-]);
 
 export async function summarizeReadme(readmeContent) {
   try {
+    // Create the LLM with environment variable
+    const model = new ChatOpenAI({
+      modelName: "gpt-3.5-turbo",
+      temperature: 0.7,
+      openAIApiKey: process.env.OPENAI_API_KEY,
+    });
+
+    // Create the chain
+    const chain = RunnableSequence.from([
+      async (input) => ({
+        readme_content: input.readme_content,
+        format_instructions: await parser.getFormatInstructions(),
+      }),
+      prompt,
+      model,
+      async (response) => {
+        try {
+          const parsed = await parser.parse(response.content);
+          return summarySchema.parse(parsed);
+        } catch (e) {
+          console.error("Failed to parse response:", e);
+          throw new Error("Failed to generate valid summary");
+        }
+      },
+    ]);
+
     // Invoke the chain with the README content
     const result = await chain.invoke({
       readme_content: readmeContent,
