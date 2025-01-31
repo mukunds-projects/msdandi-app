@@ -13,9 +13,11 @@
     "@langchain/community": "^0.3.20",
     "@langchain/core": "^0.3.26",
     "@langchain/openai": "^0.3.16",
-    "@supabase/supabase-js": "^2.47.10",
-    "langchain": "^0.3.8",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/supabase-js": "^2.48.1",
+    "langchain": "^0.3.15",
     "next": "15.1.1",
+    "next-auth": "^4.24.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^5.7.2"
